@@ -12,7 +12,7 @@
 ## Existing directories, for testing purpose can be change. but for production invariable
 projectDir="/home/michall/git/pzh_pipeline_viral/"
 external_databases_path="/mnt/raid/external_databases"
-results_dir="./pipeline_wyniki" # NIEZMIENNE DO POPRAWY W SKRYPCIE
+results_dir="./results" 
 
 # docker images required to execute this pipeline
 ## Existing images, for testing purpose can be change, but for production invariable
@@ -286,6 +286,7 @@ fi
 
 echo "Running the bacterial pipeline..."
 nextflow run ${projectDir}/nf_pipeline_bacterial.nf \
+	     --results_dir ${results_dir} \
 	     --genus ${genus} \
 	     --reads "${reads}" \
 	     --machine ${machine} \
@@ -308,6 +309,5 @@ nextflow run ${projectDir}/nf_pipeline_bacterial.nf \
 	     --L50 ${L50} \
 	     --final_coverage ${final_coverage} \
 	     --model_medaka ${model_medaka} \
-	     -with-trace \
-	     -resume \
-	     -profile ${profile}
+	     -profile ${profile} \
+	     -with-trace

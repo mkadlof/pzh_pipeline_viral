@@ -1,6 +1,7 @@
 process copy_genome_and_primers {
   tag "Detecting type for sample:${sampleId}"
   container  = params.main_image
+  memory "20 GB"
   cpus 1
   // Dummy modules that pass genome from within container to the nextflow work dir
   // It is dummy hence there is no difference between illumina and nanopre

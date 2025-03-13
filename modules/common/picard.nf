@@ -2,6 +2,7 @@ process picard_downsample {
     tag "picard:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai), path(ref_genome_with_index), val(QC_status)
 
@@ -48,6 +49,7 @@ process picard_downsample_multisegment {
     // segmentu przy "pustych" czesciach resty segmentu
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai), path(ref_genome_with_index), val(QC_status)
 

@@ -4,9 +4,9 @@ ExecutionDir = new File('.').absolutePath
 
 // ALL parameters are setup usomg bash wrapper except enterobase_api_token that MUST be part of nextflow config
 // Comments were preserved in the  nf file for a local executor
-params.genus = ''
-params.reads =''  
-params.machine = '' 
+params.genus = ""
+params.reads = ""
+params.machine = ""
 params.main_image = "" 
 params.prokka_image = "" 
 params.alphafold_image =""  
@@ -26,7 +26,8 @@ params.final_coverage = ""
 params.model_medaka = ""
 params.min_coverage_ratio = "" 
 params.min_coverage_value = ""
-params.db_absolute_path_on_host=""
+params.db_absolute_path_on_host= ""
+params.results_dir = ""
 
 // Print information that this pipeline works only for for 3 pre-defined genra
 
@@ -49,8 +50,7 @@ if ( !workflow.profile || ( workflow.profile != "slurm" && workflow.profile != "
 process run_fastqc_illumina {
   tag "fastqc for sample ${x}"
   container  = params.main_image
-  publishDir "pipeline_wyniki/${x}/QC", mode: 'copy'
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "*.json"
+  publishDir "${params.results_dir}/${x}/QC", mode: 'copy'
   cpus { params.threads > 10 ? 10 : params.threads }
   memory "10 GB"
   time "15m"
@@ -75,11 +75,11 @@ process run_fastqc_illumina {
     ERROR_MSG=""
   fi
    
-  DANE_FORWARD=(`python /opt/docker/EToKi/externals/run_fastqc_and_generate_json.py -i ${reads[0]} -m 8096 -c ${task.cpus} -x ${params.min_number_of_reads} -y ${params.min_median_quality} -s ${QC_STATUS} -r "\${ERROR_MSG}" -e pre-filtering -p "pipeline_wyniki/${x}/QC" -o forward.json`)
+  DANE_FORWARD=(`python /opt/docker/EToKi/externals/run_fastqc_and_generate_json.py -i ${reads[0]} -m 8096 -c ${task.cpus} -x ${params.min_number_of_reads} -y ${params.min_median_quality} -s ${QC_STATUS} -r "\${ERROR_MSG}" -e pre-filtering -p "${params.results_dir}/${x}/QC" -o forward.json`)
   STATUS_FORWARD_ALL="\${DANE_FORWARD[0]}"
   BASES_FORWARD="\${DANE_FORWARD[1]}"
 
-  DANE_REVERSE=(`python /opt/docker/EToKi/externals/run_fastqc_and_generate_json.py -i ${reads[1]} -m 8096 -c ${task.cpus} -x ${params.min_number_of_reads} -y ${params.min_median_quality} -s ${QC_STATUS} -r "\${ERROR_MSG}" -e pre-filtering -p "pipeline_wyniki/${x}/QC" -o reverse.json`)
+  DANE_REVERSE=(`python /opt/docker/EToKi/externals/run_fastqc_and_generate_json.py -i ${reads[1]} -m 8096 -c ${task.cpus} -x ${params.min_number_of_reads} -y ${params.min_median_quality} -s ${QC_STATUS} -r "\${ERROR_MSG}" -e pre-filtering -p "${params.results_dir}/${x}/QC" -o reverse.json`)
   STATUS_REVERSE_ALL="\${DANE_REVERSE[0]}"
   BASES_REVERSE="\${DANE_REVERSE[1]}"
  
@@ -98,8 +98,7 @@ process run_fastqc_nanopore {
   // That requires one fastq.gz file
   tag "fastqc for sample ${x}"
   container  = params.main_image
-  publishDir "pipeline_wyniki/${x}/QC", mode: 'copy'
-  //publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "*.json"
+  publishDir "${params.results_dir}/${x}/QC", mode: 'copy'
   cpus { params.threads > 10 ? 10 : params.threads }
   memory "10 GB"
   time "15m"
@@ -121,7 +120,7 @@ process run_fastqc_nanopore {
     ERROR_MSG=""
   fi
  
-  DANE_FORWARD=(`python /opt/docker/EToKi/externals/run_fastqc_and_generate_json.py -i ${reads} -m 8096 -c ${task.cpus} -x ${params.min_number_of_reads} -y ${params.min_median_quality} -s ${QC_STATUS} -r "\${ERROR_MSG}" -e pre-filtering -p "pipeline_wyniki/${x}/QC" -o forward.json`)
+  DANE_FORWARD=(`python /opt/docker/EToKi/externals/run_fastqc_and_generate_json.py -i ${reads} -m 8096 -c ${task.cpus} -x ${params.min_number_of_reads} -y ${params.min_median_quality} -s ${QC_STATUS} -r "\${ERROR_MSG}" -e pre-filtering -p "${params.results_dir}/${x}/QC" -o forward.json`)
   STATUS_FORWARD="\${DANE_FORWARD[0]}"
   TOTAL_BASES="\${DANE_FORWARD[1]}"
 
@@ -189,7 +188,6 @@ process run_initial_mlst_illumina {
   memory "5 GB"
   time "5m"
   tag "Initial MLST for sample $x"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "initial_mlst.json"
   cpus 1
   input:
   tuple val(x), path(reads), val(SPECIES), val(GENUS), val(QC_status)
@@ -345,7 +343,6 @@ process run_pilon {
   cpus params.threads
   memory "40 GB"
   time "20m"
-  // publishDir "pilon_wyniki/${x}", mode: 'copy'
   input:
   tuple val(x), path(bam1), path(bam2), path('genomic_fasta.fasta'), val(QC_status)
   output:
@@ -380,7 +377,6 @@ process extract_final_contigs {
   // Modukl przekazuje bez mozliwosci zmiany QC_stauts
   container  = params.main_image
   tag "Coverage-based filtering for sample $x"
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy'
   cpus 1
   memory "5 GB"
   time "5m"
@@ -413,8 +409,6 @@ process extract_final_stats {
   memory "1 GB"
   time "5m"
   tag "Calculating basic statistics for sample $x"
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy', pattern: "*txt"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "bacterial_genome_data.json"
   input:
   tuple val(x), path(fasta), path(fasta_reject), val(QC_status), val(GENUS)
   output:
@@ -457,7 +451,6 @@ process run_7MLST {
   cpus 1
   memory "10 GB"
   time "5m"
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy'
   input:
   tuple val(x), path(fasta), val(QC_status), val(SPECIES), val(GENUS), val(QC_status_contaminations)
   output:
@@ -507,8 +500,6 @@ process parse_7MLST {
   memory "2 GB"
   time "2m"
   tag "Parsing MLST for sample $x"
-  // publishDir "pipeline_wyniki/${x}/MLST", mode: 'copy', pattern: 'MLST*txt'
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: 'MLST.json'
   // maxForks 1 We will use delayed channel tactics to assure "novel" STs are correctly added to the file. THIS WILL NOT WORK WITH SLURM.
   input:
   tuple val(x), path('MLSTout.txt'), val(SPECIES), val(GENUS), val(QC_status), val(QC_status_contaminations) 
@@ -679,8 +670,6 @@ process run_Seqsero {
   // SeqSero only works for Salmonella
   container  =  params.main_image
   tag "Predicting OH for sample $x with Seqsero"
-  // publishDir "pipeline_wyniki/${x}/seqsero", mode: 'copy',  pattern: "seqsero/SeqSero_result.txt"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "seqsero.json"
   cpus { params.threads > 3 ? 3 : params.threads }
   memory "5 GB"
   time "5m"
@@ -728,8 +717,6 @@ process run_sistr {
   cpus { params.threads > 3 ? 3 : params.threads }
   memory "5 GB"
   time "5m"
-  // publishDir "pipeline_wyniki/${x}/sistr", mode: 'copy', pattern: "sistr-output.tab"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "sistr.json"
   input:
   tuple val(x), path(fasta), val(QC_status), val(SPECIES), val(GENUS), val(QC_status_contaminations)
   output:
@@ -777,8 +764,6 @@ process run_ectyper {
   memory "10 GB"
   time "5m"
   tag "Predicting OH for sample $x with ectyper"
-  // publishDir "pipeline_wyniki/${x}/ECTyper", mode: 'copy'
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "ectyper.json"
   input:
   tuple val(x), path(fasta), val(QC_status), val(SPECIES), val(GENUS), val(QC_status_contaminations)
   output:
@@ -826,10 +811,6 @@ process run_resfinder {
   time "5m"
   // Too many simultaneous processes result in a "Broken pipe" error
   tag "Predicting microbial resistance for sample $x"
-  // publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "resfinder/ResFinder_results_table.txt"
-  // publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "resfinder/pheno_table_*.txt"
-  // publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "resfinder/PointFinder_results.txt"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "resfinder.json"
   input:
   tuple val(x), path(fasta), val(QC_status), val(SPECIES), val(GENUS), val(QC_status_contaminations)
   output:
@@ -904,7 +885,6 @@ process run_cgMLST {
   container  = params.main_image
   containerOptions "--volume ${params.db_absolute_path_on_host}/cgmlst:/db"
   tag "Predicting cgMLST for sample $x"
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy'
   cpus params.threads
   memory "40 GB"
   time "40m"
@@ -941,7 +921,6 @@ process parse_cgMLST {
   container  = params.main_image
   containerOptions "--volume ${params.db_absolute_path_on_host}/cgmlst:/db"
   tag "Parsing cgMLST for sample $x"
-  publishDir "pipeline_wyniki/${x}/cgMLST", mode: 'copy', pattern: 'cgMLST*txt'
   cpus 1
   memory "12 GB"
   time "40m"
@@ -1144,8 +1123,6 @@ process run_prokka {
 
   container  = params.prokka_image
   tag "Predicting genes for sample $x"
-  // Do we really need prokka output in results dir ? 
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy'
   cpus { params.threads > 25 ? 25 : params.threads }
   memory "10 GB"
   time "20m"
@@ -1179,8 +1156,6 @@ process run_VFDB {
   containerOptions "--volume ${params.db_absolute_path_on_host}/vfdb:/db"
   // Ponownie montujemy na sztyno do /db bo taka lokalizacje na sztywno ma wpisany moj skrypt
   tag "Predicting VirulenceFactors for sample $x"
-  // publishDir "pipeline_wyniki/${x}/VFDB/", mode: 'copy'
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "vfdb.json"
   cpus { params.threads > 25 ? 25 : params.threads }
   memory "20 GB"
   time "40m"
@@ -1241,7 +1216,6 @@ process run_VFDB {
 process parse_VFDB_ecoli {
   // Parser wynikow dla E.coli w celu okreslenia czy jest to STEC/VTEC itd ...
   tag "Predicting phenotype for sample $x"
-  // publishDir "pipeline_wyniki/${x}/", mode: 'copy'
   cpus 1
   memory "1 GB"
   time "5m"
@@ -1363,8 +1337,6 @@ process run_spifinder {
   container  = params.main_image
   containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
   tag "Predicting virulence islands for sample $x"
-  // publishDir "pipeline_wyniki/${x}/spifinder", mode: 'copy', pattern: "results_tab.tsv"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "spifinder.json"
   cpus 1
   memory "1 GB"
   time "5m"
@@ -1408,9 +1380,6 @@ process run_kraken2_illumina {
   // kraken2 instalowany jest przez ETOKI i jest w path kontenera do salmonelli
   tag "Run kraken2 for sample:${x}"
   container  = params.main_image
-  // publishDir "pipeline_wyniki/${x}/kraken2", mode: 'copy', pattern: "report_kraken2_individualreads.txt"
-  // publishDir "pipeline_wyniki/${x}/kraken2", mode: 'copy', pattern: "report_kraken2.txt"
-  // publishDir "pipeline_wyniki/${x}/kraken2", mode: 'copy', pattern: "Summary_kraken_*.txt"
   containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
   cpus { params.threads > 10 ? 10 : params.threads }
   memory '90 GB'
@@ -1459,7 +1428,6 @@ process run_kraken2_illumina {
 process run_metaphlan_illumina {
   tag "Run Metaphlan for sample:${x}"
   container  = params.main_image
-  // publishDir "pipeline_wyniki/${x}/metaphlan", mode: 'copy', pattern: "report_metaphlan*"
   containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
   cpus { params.threads > 15 ? 15 : params.threads }
   memory '30 GB'
@@ -1491,8 +1459,6 @@ process run_kmerfinder_illumina {
   // This module unlike krakern and metaphlan will pass QC_STATUS and TOTAL_BASES to get_species_illumina
   tag "kmerfinder:${x}"
   container  = params.main_image
-  // publishDir "pipeline_wyniki/${x}/kmerfinder", mode: 'copy', pattern: "results.spa"
-  // containerOptions "--volume ${params.db_absolute_path_on_host}/Kmerfinder/kmerfinder_db:/kmerfinder_db"
   containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
   cpus 1
   memory '20 GB'
@@ -1534,7 +1500,6 @@ process run_pHierCC_enterobase {
   cpus 1
   memory "5 GB"
   time "5m"
-  // publishDir "pipeline_wyniki/${x}/pHierCC", mode: 'copy'
   input:
   tuple val(x), path('cgMLST_parsed_output.txt'), path('cgMLST_sample_full_list_of_allels.txt'), path('cgMLST_closest_ST_full_list_of_allels.txt'), val(SPECIES), val(GENUS), val(QC_status), val(QC_status_contaminations)
   output:
@@ -1643,7 +1608,6 @@ process run_pHierCC_pubmlst {
   memory "1 GB"
   time "5m"
   tag "Predicting hierCC with local database for sample $x"
-  publishDir "pipeline_wyniki/${x}/pHierCC", mode: 'copy'
   input:
   tuple val(x), path('cgMLST_parsed_output.txt'), path('cgMLST_sample_full_list_of_allels.txt'), path('cgMLST_closest_ST_full_list_of_allels.txt'), val(SPECIES), val(GENUS),  val(QC_status), val(QC_status_contaminations)
   output:
@@ -1740,7 +1704,6 @@ process run_pHierCC_local {
   memory "5 GB"
   time "5m"
   tag "Predicting hierCC with local database for sample $x"
-  // publishDir "pipeline_wyniki/${x}/pHierCC", mode: 'copy'
   input:
   tuple val(x), path('cgMLST_parsed_output.txt'), path('cgMLST_sample_full_list_of_allels.txt'), path('cgMLST_closest_ST_full_list_of_allels.txt'), val(SPECIES), val(GENUS),  val(QC_status), val(QC_status_contaminations)
   output:
@@ -1931,11 +1894,10 @@ process extract_historical_data_enterobase {
   container  = params.main_image
   tag "Extracting historical data for sample $x"
   containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
-  publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "enterobase_historical_data.txt"
+  publishDir "${params.results_dir}/${x}/", mode: 'copy', pattern: "enterobase_historical_data.txt"
   cpus 1
   memory "15 GB"
   time "10m"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "enterobase.json"
   input:
   tuple val(x), path('parsed_phiercc_enterobase.txt'), val(SPECIES), val(GENUS),  val(QC_status), val(QC_status_contaminations)
   output:
@@ -2048,7 +2010,7 @@ with open('parsed_phiercc_enterobase.txt') as f1, open('enterobase.json', 'w') a
 
     to_dump = {"hiercc_clustering_external_data" : list_withphiercc_to_dump,
                "external_historical_data" : [{"level" : phiercc_level_userdefined,
-                                            "data_file" : "pipeline_wyniki/${x}/enterobase_historical_data.txt"}]}
+                                            "data_file" : "${params.results_dir}/${x}/enterobase_historical_data.txt"}]}
     f2.write(json.dumps(to_dump))
 """
 }
@@ -2097,8 +2059,7 @@ process extract_historical_data_pubmlst {
   cpus 1
   memory "5 GB"
   time "5m"
-  publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "pubmlst_historical_data.txt"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "pubmlst.json"
+  publishDir "${params.results_dir}/${x}/", mode: 'copy', pattern: "pubmlst_historical_data.txt" 
   input:
   tuple val(x), path('parsed_phiercc_pubmlst.txt'), val(SPECIES), val(GENUS), val(QC_status), val(QC_status_contaminations)
   output:
@@ -2198,7 +2159,7 @@ with open('parsed_phiercc_pubmlst.txt') as f1, open('pubmlst.json', 'w') as f2:
 
     to_dump = {"hiercc_clustering_external_data" : list_withphiercc_to_dump,
                "external_historical_data" : [{"level" : phiercc_level_userdefined,
-               "data_file" : "pipeline_wyniki/${x}/pubmlst_historical_data.txt"}]}
+               "data_file" : "${params.results_dir}/${x}/pubmlst_historical_data.txt"}]}
     f2.write(json.dumps(to_dump))
 """
 }
@@ -2210,7 +2171,6 @@ process plot_historical_data_pubmlst {
   memory "2 GB"
   time "5m"
   tag "Plot historical data for sample $x"
-  // publishDir "pipeline_wyniki/${x}/", mode: 'copy'
   input:
   tuple val(x), path('pubmlst_historical_data.txt'), val(SPECIES), val(GENUS), val(QC_status), val(QC_status_contaminations)
   output:
@@ -2240,8 +2200,6 @@ fi
 process run_amrfinder {
   container  = params.main_image
   tag "Predicting microbial resistance with AMRfinder for sample $x"
-  // publishDir "pipeline_wyniki/${x}/AMRplus_fider", mode: 'copy', pattern: "AMRfinder*"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: 'amrfinder.json'
   containerOptions "--volume ${params.db_absolute_path_on_host}/amrfinder_plus:/AMRfider"
   cpus 1
   memory "5 GB"
@@ -2297,7 +2255,7 @@ process run_alphafold {
     // Let us leave one GPU free just in case a "failed" process rebounce and quickly ask for an empy GPU
     container  = params.alphafold_image
     containerOptions "--volume ${params.db_absolute_path_on_host}/alphafold:/db --gpus all"
-    publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "${x}_gyrase_complex.pdb"
+    publishDir "${params.results_dir}/${x}/", mode: 'copy', pattern: "${x}_gyrase_complex.pdb"
     input:
     tuple val(x), path(gff), path(faa), path(ffn), path(tsv), val(SPECIES), val(GENUS), val(QC_status), val(QC_status_contaminations)
 
@@ -2388,7 +2346,7 @@ process run_alphafold {
         run_alpfafold_mer gyrase_complex.fasta wyniki
         protein_name="Gyrase"
         cp wyniki/gyrase_complex/relaxed_model_1_multimer_v3_pred_*pdb ${x}_gyrase_complex.pdb
-        pdb_path="${x}_gyrase_complex.pdb"
+        pdb_path="${params.results_dir}/${x}/${x}_gyrase_complex.pdb"
         echo -e "{\\"status\\":\\"tak\\",
                   \\"protein_structure_data\\":[{\\"protein_name\\":\\"\${protein_name}\\",
                                                  \\"pdb_file\\":\\"\${pdb_path}\\"
@@ -2415,7 +2373,7 @@ process run_alphafold_slurm {
     clusterOptions "--gpus 1 --nodelist=${hostname}"
     container  = params.alphafold_image
     containerOptions "--volume ${params.db_absolute_path_on_host}/alphafold:/db --gpus=\"device=\${SLURM_JOB_GPUS}\""
-    publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "${x}_gyrase_complex.pdb"
+    publishDir "${params.results_dir}/${x}/", mode: 'copy', pattern: "${x}_gyrase_complex.pdb"
     input:
     tuple val(x), path(gff), path(faa), path(ffn), path(tsv), val(SPECIES), val(GENUS), val(QC_status), val(QC_status_contaminations)
 
@@ -2483,7 +2441,7 @@ process run_alphafold_slurm {
         run_alpfafold_mer gyrase_complex.fasta wyniki
         protein_name="Gyrase"
         cp wyniki/gyrase_complex/relaxed_model_1_multimer_v3_pred_*pdb ${x}_gyrase_complex.pdb
-        pdb_path="${x}_gyrase_complex.pdb"
+        pdb_path="${params.results_dir}/${x}/${x}_gyrase_complex.pdb"
         echo -e "{\\"status\\":\\"tak\\",
                   \\"protein_structure_data\\":[{\\"protein_name\\":\\"\${protein_name}\\",
                                                  \\"pdb_file\\":\\"\${pdb_path}\\"
@@ -2509,8 +2467,6 @@ process run_plasmidfinder {
   memory "5 GB"
   time "5m"
   tag "Predicting plasmids for sample $x"
-  // publishDir "pipeline_wyniki/${x}/plasmidfinder", mode: 'copy', pattern: "results_tab.tsv"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: 'plasmidfinder.json'
   input:
   tuple val(x), path(fasta), val(QC_status), val(SPECIES), val(GENUS), val(QC_status_contaminations)
   output:
@@ -2556,8 +2512,6 @@ process run_virulencefinder {
   memory "5 GB" 
   time "5m"
   tag "Predicting VirulenceFactors with run_virulencefinder for sample $x"
-  // publishDir "pipeline_wyniki/${x}/virulencefinder", mode: 'copy', pattern: "results_tab.tsv"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: 'virulencefinder.json'
   input:
   tuple val(x), path(fasta),  val(QC_status), val(SPECIES), val(GENUS), val(QC_status_contaminations)
   output:
@@ -2612,8 +2566,6 @@ cpus 1
 memory "1 GB"
 time "5m"
 tag "Predicting species for ${x}"
-// publishDir "pipeline_wyniki/${x}", mode: 'copy', pattern: "predicted_genus_and_species.txt"
-// publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "contaminations.json"
 input:
 tuple val(x), path('report_kraken2.txt'), path('report_kraken2_individualreads.txt'), path('Summary_kraken_genera.txt'), path('Summary_kraken_species.txt'), path('report_metaphlan_SGB.txt'), path('report_metaphlan_species.txt'), path('report_metaphlan_genera.txt'),  path('results.spa'), path('results.txt'), val(KMERFINDER_SPECIES), val(KMERFINDER_GENUS), val(QC_STATUS), val(TOTAL_BASES)
 
@@ -2745,7 +2697,6 @@ process run_cgMLST_final_json {
   memory "1 GB"
   time "2m"
   tag "generate final cgMLST json for sample $x"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "cgMLST_full.json"
   input:
   tuple val(x), path('cgMLST_initial.json'), path('cgMLST_phiercc_local.json'), path('cgMLST_phiercc_enterobase.json'), path('cgMLST_phiercc_pubmlst.json')
   output:
@@ -2790,8 +2741,7 @@ process run_split_fasta {
   memory "1 GB"
   time "2m"
   tag "Splitting genome fasta for sample $x"
-  publishDir "pipeline_wyniki/${x}/fastas", mode: 'copy', pattern: "*fasta"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "fasta_info.json"
+  publishDir "${params.results_dir}/${x}/fastas", mode: 'copy', pattern: "*fasta"
   input:
     tuple val(x), path(fasta), val(QC_status)
   output:
@@ -2819,7 +2769,7 @@ else:
     records = SeqIO.parse(fasta_file, "fasta")
     for record in records:
         tmp_list.append({"segment_name" : record.id,
-                         "segment_file" : "pipeline_wyniki/${x}/fastas/" + f"{record.id}.fasta"})
+                         "segment_file" : "${params.results_dir}/${x}/fastas/" + f"{record.id}.fasta"})
         with open(f"{record.id}.fasta", "w") as f:
             f.write(f">{record.id}\\n{str(record.seq)}")
 
@@ -2837,7 +2787,7 @@ process merge_all_subjsons_illumina {
   memory "1 GB"
   time "2m"
   tag "Merging all subjsons for sample $x"
-  publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "${x}.json"
+  publishDir "${params.results_dir}/${x}/", mode: 'copy', pattern: "${x}.json"
   input:
   tuple val(x), path("sistr.json"), path("seqsero.json"), path("spifinder.json"), path("ectyper.json"), path("virulencefinder.json"), path("alphafold.json"), path("vfdb.json"), val(PATOTYP), path("plasmidfinder.json"), path("amrfinder.json"), path("resfinder.json"), path("cgMLST.json"), path("MLST.json"), path("forward.json"), path("reverse.json"), path("contaminations.json"), path('Genus_species.json'), path("initial_MLST.json"), path("genome_file.json"), path("bacterial_genome.json")
   val(ExecutionDir)
@@ -2883,7 +2833,6 @@ process run_initial_mlst_nanopore {
   memory "5 GB"
   time "5m"
   tag "Initial MLST for sample $x"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "initial_mlst.json"
   input:
   tuple val(x), path(reads), val(SPECIES), val(GENUS), val(QC_status)
   output:
@@ -2933,7 +2882,6 @@ process run_flye {
 
   container  = params.main_image
   tag "Predicting scaffold with flye for sample $x"
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy', pattern: "*"
   cpus { params.threads > 15 ? 15 : params.threads }
   memory "60 GB"
   time "1h 20m"
@@ -2995,7 +2943,6 @@ process run_minimap2 {
   // Proces do mapowania odczytow na scaffold
   tag "Remapping of reads to predicted scaffold for sample $x"
   container  = params.main_image 
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy', pattern: "*"
   cpus params.threads
   memory "20 GB"
   time "10m"
@@ -3020,7 +2967,6 @@ process run_minimap2_2nd {
   // W nanopre w jednym workflow uzywam go 2 razy wiec musze zrobic ta glupia kopie
   tag "Remapping of reads to predicted scaffold for sample $x"
   container  = params.main_image
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy', pattern: "*"
   cpus params.threads
   memory "20 GB"
   time "10m"
@@ -3076,7 +3022,6 @@ process run_medaka {
 
   container  = params.main_image
   tag "Medaka for sample $x"
-  // publishDir "pipeline_wyniki/${x}/medaka", mode: 'copy', pattern: 'latest_pilon.*'
   cpus { params.threads > 15 ? 15 : params.threads }
   memory "20 GB"
   time "10m"
@@ -3122,9 +3067,6 @@ process run_kraken2_nanopore {
   // kopia processu do illuminy, ale z uwzglednieniem ze jest tylko jeden plik z odczytami
   tag "kraken2:${x}"
   container  = params.main_image
-  // publishDir "pipeline_wyniki/${x}/kraken2", mode: 'copy', pattern: "report_kraken2_individualreads.txt"
-  // publishDir "pipeline_wyniki/${x}/kraken2", mode: 'copy', pattern: "report_kraken2.txt"
-  // publishDir "pipeline_wyniki/${x}/kraken2", mode: 'copy', pattern: "Summary_kraken*.txt"
   containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
   cpus { params.threads > 10 ? 10 : params.threads }
   memory '90 GB'
@@ -3174,7 +3116,6 @@ process run_kraken2_nanopore {
 process run_kmerfinder_nanopore {
   tag "kmerfinder:${x}"
   container  = params.main_image
-  // publishDir "pipeline_wyniki/${x}/kmerfinder", mode: 'copy', pattern: "results.spa"
   containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
   cpus 1
   memory '20 GB'
@@ -3211,8 +3152,6 @@ process get_species_nanopore {
   memory "1 GB"
   time "5m"
   tag "Predicting species for ${x}"
-  // publishDir "pipeline_wyniki/${x}", mode: 'copy', pattern: "predicted_genus_and_species.txt"
-  // publishDir "pipeline_wyniki/${x}/json_output", mode: 'copy', pattern: "contaminations.json"
   input:
   tuple val(x), path('report_kraken2.txt'), path('report_kraken2_individualreads.txt'), path('Summary_kraken_genera.txt'), path('Summary_kraken_species.txt'),  path('results.spa'), path('results.txt'), val(KMERFINDER_SPECIES), val(KMERFINDER_GENUS), val(QC_STATUS), val(TOTAL_BASES)
 
@@ -3334,7 +3273,7 @@ process merge_all_subjsons_nanopore {
   memory "1 GB"
   time "2m"
   tag "Merging all subjsons for sample $x"
-  publishDir "pipeline_wyniki/${x}/", mode: 'copy', pattern: "${x}.json"
+  publishDir "${params.results_dir}/${x}/", mode: 'copy', pattern: "${x}.json" 
   input:
   tuple val(x), path("sistr.json"), path("seqsero.json"), path("spifinder.json"), path("ectyper.json"), path("virulencefinder.json"), path("alphafold.json"), path("vfdb.json"), val(PATOTYP), path("plasmidfinder.json"), path("amrfinder.json"), path("resfinder.json"), path("cgMLST.json"), path("MLST.json"), path("forward.json"), path("contaminations.json"), path('Genus_species.json'), path("initial_MLST.json"), path("genome_file.json"), path("bacterial_genome.json")
   val(ExecutionDir)

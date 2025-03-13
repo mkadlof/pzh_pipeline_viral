@@ -2,6 +2,7 @@ process freyja_sars {
     tag "freyja:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     // publishDir "${params.results_dir}/${sampleId}", mode: 'copy', pattern: "coinfections.tsv"
     containerOptions "--volume ${params.external_databases_path}:/home/external_databases/"
 

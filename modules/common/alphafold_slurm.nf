@@ -2,6 +2,9 @@ process alphafold_slurm {
     tag "alphafold:${sampleId}"
     cpus { params.threads > 15 ? 15 : params.threads }
     container  = params.alphafold_image
+    memory "250 GB"
+    time "40m"
+    clusterOptions "--gpus 1 --nodelist=${params.hostname}"
     containerOptions "--volume ${params.external_databases_path}/alphafold:/db --gpus=\"device=\${SLURM_JOB_GPUS}\""
     publishDir "${params.results_dir}/${sampleId}", mode: 'copy', pattern: "*.pdb"
 
@@ -15,6 +18,13 @@ process alphafold_slurm {
     script:
     """
     # Original alphafold function, which we dont use
+    
+    check_fasta_length() {
+      local file="\$1"
+      local length=`grep -v ">" \${file} | fold -w1 | wc -l`
+      echo \${length} 
+    }
+
     run_alpfafold() {
       # Zmienna \$1 to plik z fasta
       # Zmienna \$2 to sciezka do katalogu z wynikami
@@ -77,8 +87,13 @@ process alphafold_slurm {
     sed -i -E "s|'model_1',|['model_1']|g" /app/alphafold/alphafold/model/config.py
     sed -i -zE "s|'model_2',\\s*'model_3',\\s*'model_4',\\s*'model_5',\\s*||g" /app/alphafold/alphafold/model/config.py
 
+  
     # directory for alphafold output
     mkdir wynik
+
+    # declare variables 
+    pdb_path_1=""
+    pdb_path_2=""
 
     if [ ${QC_status} == "nie" ]; then
       # failed QC 
@@ -92,96 +107,117 @@ process alphafold_slurm {
       cat nextalign_gene_F.translation.fasta | tr -d "-" | tr -d "X" | tr -d "*" >> tmp
       mv tmp nextalign_gene_F.translation.fasta
       target_fasta_F="nextalign_gene_F.translation.fasta"
-      run_custom_alpfafold "\${target_fasta_F}" wynik
-      
-      cp wynik/`basename \${target_fasta_F} ".fasta"`/ranked_0.pdb ${sampleId}_F.pdb
-      # align all proteins to a common reference
-      # TO DO
-
-      # json
-      pdb_path_1="${params.results_dir}/${sampleId}/${sampleId}_F.pdb"
+      F_length=\$(check_fasta_length "\${target_fasta_F}")
+ 
+      if [ \${F_length} -gt 10 ]; then
+          run_custom_alpfafold "\${target_fasta_F}" wynik
+          cp wynik/`basename \${target_fasta_F} ".fasta"`/ranked_0.pdb ${sampleId}_F.pdb
+          pdb_path_1="${params.results_dir}/${sampleId}/${sampleId}_F.pdb"
+      fi
 
 
       cat nextalign_gene_G.translation.fasta | tr -d "-" | tr -d "X" | tr -d "*" >> tmp
       mv tmp nextalign_gene_G.translation.fasta
       target_fasta_G="nextalign_gene_G.translation.fasta"
-      run_custom_alpfafold "\${target_fasta_G}" wynik
-      cp wynik/`basename \${target_fasta_G} ".fasta"`/ranked_0.pdb ${sampleId}_G.pdb
-      # againg align to reference
+      G_length=\$(check_fasta_length "\${target_fasta_G}")
+      if [  \${G_length} -gt 10 ]; then
+          run_custom_alpfafold "\${target_fasta_G}" wynik
+          cp wynik/`basename \${target_fasta_G} ".fasta"`/ranked_0.pdb ${sampleId}_G.pdb
+          pdb_path_2="${params.results_dir}/${sampleId}/${sampleId}_G.pdb"
+      fi
       
-       
-      pdb_path_2="${params.results_dir}/${sampleId}/${sampleId}_G.pdb"
-      echo -e "{\\"status\\":\\"tak\\",
-                \\"protein_structure_data\\":[{\\"protein_name\\":\\"F\\",
-                                               \\"pdb_file\\":\\"\${pdb_path_1}\\"
-                                              },
-                                              {
-                                              \\"protein_name\\":\\"G\\",
-                                               \\"pdb_file\\":\\"\${pdb_path_2}\\"
-                                              }
-                                              ]}" >> alphafold.json
+      # align structure to a common reference 
+      if [[ -z "\${pdb_path_1}" && -z "\${pdb_path_2}" ]]; then
+          # neither protein was analyzed dummy output 
+          touch ${sampleId}.pdb
+          ERR_MSG="Sequence of protein F or G was too short to produce a valid PDB file"
+          echo -e "{\\"status\\":\\"blad\\",
+                     \\"error_message\\": \\"\${ERR_MSG}\\"}" > alphafold.json       
+
+      else
+          echo -e "{\\"status\\":\\"tak\\",
+                    \\"protein_structure_data\\":[{\\"protein_name\\":\\"F\\",
+                                                   \\"pdb_file\\":\\"\${pdb_path_1}\\"
+                                                  },
+                                                  {
+                                                  \\"protein_name\\":\\"G\\",
+                                                  \\"pdb_file\\":\\"\${pdb_path_2}\\"
+                                                 }
+                                                 ]}" >> alphafold.json
+      fi
 
     elif [ ${params.species} == "Influenza" ]; then
       cat nextalign_gene_HA.translation.fasta | tr -d "-" | tr -d "X" | tr -d "*" >> tmp
       mv tmp nextalign_gene_HA.translation.fasta
       target_fasta_HA="nextalign_gene_HA.translation.fasta"
-      run_custom_alpfafold "\${target_fasta_HA}" wynik
+      HA_length=\$(check_fasta_length "\${target_fasta_HA}")
 
-      cp wynik/`basename \${target_fasta_HA} ".fasta"`/ranked_0.pdb ${sampleId}_HA.pdb
-
-      # align all proteins to a common reference
-      # TO DO
-      # json
-      pdb_path_1="${params.results_dir}/${sampleId}/${sampleId}_HA.pdb"
+      if [ \${HA_length} -gt 10 ]; then
+          run_custom_alpfafold "\${target_fasta_HA}" wynik
+          cp wynik/`basename \${target_fasta_HA} ".fasta"`/ranked_0.pdb ${sampleId}_HA.pdb 
+          pdb_path_1="${params.results_dir}/${sampleId}/${sampleId}_HA.pdb"
+      fi
      
       cat nextalign_gene_NA.translation.fasta | tr -d "-" | tr -d "X" | tr -d "*" >> tmp
       mv tmp nextalign_gene_NA.translation.fasta
       target_fasta_NA="nextalign_gene_NA.translation.fasta"
-      run_custom_alpfafold "\${target_fasta_NA}" wynik
-
-      cp wynik/`basename \${target_fasta_NA} ".fasta"`/ranked_0.pdb ${sampleId}_NA.pdb
-
-      # align all proteins to a common reference
-      # TO DO
-      # json
-      pdb_path_2="${params.results_dir}/${sampleId}/${sampleId}_HA.pdb"
-      echo -e "{\\"status\\":\\"tak\\",
-                \\"protein_structure_data\\":[{\\"protein_name\\":\\"HA\\",
-                                               \\"pdb_file\\":\\"\${pdb_path_1}\\"
-                                              },
-                                              {
-                                              \\"protein_name\\":\\"NA\\",
-                                               \\"pdb_file\\":\\"\${pdb_path_2}\\"
-                                              }
-                                              ]}" >> alphafold.json
-
- 
-    elif [ ${params.species} == "SARS-CoV-2" ]; then
-      if [ -e "nextalign_gene_S.translation.fasta" ]; then
-       
-        cat nextalign_gene_S.translation.fasta | tr -d "-" | tr -d "X" | tr -d "*" >> tmp
-        mv tmp nextalign_gene_S.translation.fasta
-        target_fasta="nextalign_gene_S.translation.fasta" 
-        run_custom_alpfafold "\${target_fasta}" wynik
-
-        # Give some time to clear up memory from a device ...
-        # sleep `python -c 'import random; print(random.randint(4, 35))'`
-        cp wynik/`basename \${target_fasta} ".fasta"`/ranked_0.pdb ${sampleId}_spike.pdb
-        
-        # align all proteins to a common reference
-        # TO DO
-
-        # json
-        pdb_path="${params.results_dir}/${sampleId}/${sampleId}_spike.pdb"
-        echo -e "{\\"status\\":\\"tak\\",
-                \\"protein_structure_data\\":[{\\"protein_name\\":\\"Spike\\",
-                                               \\"pdb_file\\":\\"\${pdb_path}\\"
-                                               }]}" >> alphafold.json
+      NA_length=\$(check_fasta_length "\${target_fasta_NA}")
+      if [ \${NA_length} -gt 10 ]; then
+          run_custom_alpfafold "\${target_fasta_NA}" wynik
+          cp wynik/`basename \${target_fasta_NA} ".fasta"`/ranked_0.pdb ${sampleId}_NA.pdb
+          pdb_path_2="${params.results_dir}/${sampleId}/${sampleId}_NA.pdb"
+      fi
+      
+      if [[ -z "\${pdb_path_1}" && -z "\${pdb_path_2}" ]]; then
+          # neither protein was analyzed dummy output
+          touch ${sampleId}.pdb
+          ERR_MSG="Sequence of protein NA or HA was too short to produce a valid PDB file"
+          echo -e "{\\"status\\":\\"blad\\",
+                     \\"error_message\\": \\"\${ERR_MSG}\\"}" > alphafold.json
       else
-        touch ${sampleId}.pdb
-        ERR_MSG="No fasta for Spike protein"
-        echo -e "{\\"status\\":\\"nie\\",
-                  \\"error_message\\": \\"\${ERR_MSG}\\"}" >> alphafold.json
+          echo -e "{\\"status\\":\\"tak\\",
+                      \\"protein_structure_data\\":[{\\"protein_name\\":\\"HA\\",
+                                                   \\"pdb_file\\":\\"\${pdb_path_1}\\"
+                                                   },
+                                                   {
+                                                    \\"protein_name\\":\\"NA\\",
+                                                    \\"pdb_file\\":\\"\${pdb_path_2}\\"
+                                                   }
+                                                   ]}" >> alphafold.json
+
+      fi
+    elif [ ${params.species} == "SARS-CoV-2" ]; then
+       if [ -e "nextalign_gene_S.translation.fasta" ]; then
+       
+         cat nextalign_gene_S.translation.fasta | tr -d "-" | tr -d "X" | tr -d "*" >> tmp
+         mv tmp nextalign_gene_S.translation.fasta
+         target_fasta_S="nextalign_gene_S.translation.fasta"
+         S_length=\$(check_fasta_length "\${target_fasta_S}")
+         if [ \${S_length} -gt 10 ]; then
+             run_custom_alpfafold "\${target_fasta_S}" wynik
+             cp wynik/`basename \${target_fasta_S} ".fasta"`/ranked_0.pdb ${sampleId}_spike.pdb
+             pdb_path_1="${params.results_dir}/${sampleId}/${sampleId}_spike.pdb"
+         fi
+ 
+         # align all proteins to a common reference
+         # TO DO
+
+         if [ -z "\${pdb_path_1}" ]; then
+             touch ${sampleId}.pdb
+             ERR_MSG="Sequence of the Spike protein was too short"
+             echo -e "{\\"status\\":\\"blad\\",
+                       \\"error_message\\": \\"\${ERR_MSG}\\"}" >> alphafold.json
+         else
+             echo -e "{\\"status\\":\\"tak\\",
+                       \\"protein_structure_data\\":[{\\"protein_name\\":\\"Spike\\",
+                                                      \\"pdb_file\\":\\"\${pdb_path_1}\\"
+                                                     }]}" >> alphafold.json
+         fi
+       else
+         touch ${sampleId}.pdb
+         ERR_MSG="No fasta for Spike protein"
+         echo -e "{\\"status\\":\\"nie\\",
+                    \\"error_message\\": \\"\${ERR_MSG}\\"}" >> alphafold.json
 
       fi
     fi

@@ -4,6 +4,7 @@ process masking {
     input:
     tuple val(sampleId), path(bam), path(bai), path(primers), path(pairs), val(QC_status)
     cpus 1
+    memory "20 GB"
     output:
     tuple val(sampleId), path('ivar_trimmed_all.bam'), val(QC_status)
 
@@ -32,6 +33,7 @@ process masking_nanopore {
     tag "masking:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai), path(genome), path(primers), val(QC_status)
     val(tolerance)

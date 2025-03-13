@@ -6,6 +6,7 @@ process freyja_infl {
     tag "freyja:${sampleId}"
     container  = params.main_image
     cpus params.threads
+    memory "20 GB"
     containerOptions "--volume ${params.external_databases_path}:/home/external_databases/"
 
     input:

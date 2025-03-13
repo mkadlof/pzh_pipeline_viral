@@ -6,6 +6,7 @@ process freyja_rsv {
     tag "freyja:${sampleId}"
     container  = params.main_image
     cpus params.threads
+    memory "40 GB"
     containerOptions "--volume ${params.external_databases_path}:/home/external_databases/"
 
     input:

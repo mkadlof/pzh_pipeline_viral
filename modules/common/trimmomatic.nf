@@ -3,6 +3,7 @@ process trimmomatic {
     container  = params.main_image
     tag "trimmomatic:${sampleId}"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(reads), val(QC_status)
 

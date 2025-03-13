@@ -2,6 +2,7 @@ process snpEff_nanopore {
     tag "snpEff:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     // publishDir "${params.results_dir}/${sampleId}", mode: 'copy', pattern: "${sampleId}_detected_variants_consensus_annotated.txt"
 
     input:

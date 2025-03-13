@@ -3,6 +3,7 @@ process lofreq {
     container  = params.main_image
     // publishDir "${params.results_dir}/${sampleId}/lofreq", mode: 'copy'
     cpus { params.threads > 10 ? 10 : params.threads }
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai), val(QC_status), path(ref_genome)
 

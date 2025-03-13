@@ -4,6 +4,7 @@ process merging_nanopore {
     tag "merging:${sampleId}"
     container  = params.main_image
     cpus { params.threads > 15 ? 15 : params.threads }
+    memory "20 GB"
     input:
     tuple val(sampleId), path('trimmed_first.bam'), path('trimmed_first.bam.bai'),  val(QC_status), path(genome),  path('trimmed_second.bam'), path('trimmed_second.bam.bai'),  val(QC_status_2)
 

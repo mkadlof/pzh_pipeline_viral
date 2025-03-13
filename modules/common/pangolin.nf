@@ -2,6 +2,7 @@ process pangolin {
     tag "pangolin:${sampleId}"
     container = params.main_image
     cpus { params.threads > 3 ? 3 : params.threads }
+    memory "20 GB"
     // publishDir "${params.results_dir}/${sampleId}", mode: 'copy', pattern: "pangolin_lineage.csv"
     containerOptions "--volume ${params.external_databases_path}:/home/external_databases/"
 

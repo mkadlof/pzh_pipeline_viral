@@ -4,6 +4,7 @@ process introduce_SV_with_manta {
     publishDir "${params.results_dir}/${sampleId}/", mode: 'copy', pattern: "output*fasta"
     container = params.manta_image
     cpus { params.threads > 15 ? 15 : params.threads }
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam_files), path(bai_files),  path(ref_genome_with_index), path("mediana_per_segment.txt"), val(QC_status_picard), path(consensus_files), val(QC_status_consensus)
 

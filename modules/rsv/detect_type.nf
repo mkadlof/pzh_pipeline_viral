@@ -2,6 +2,7 @@ process detect_type_illumina {
   // Determine if we are dealing with RSV A or B based on score ratio after mapping to two genome
   tag "Detecting type for sample:${sampleId}"
   cpus params.threads
+  memory "40 GB"
   container  = params.main_image
   input:
     tuple val(sampleId), path(reads), val(QC_STATUS)
@@ -78,6 +79,7 @@ process detect_type_nanopore {
   // Determine if we are dealing with RSV A or B based on score ratio after mapping to two genomes
   tag "Detecting type for sample:${sampleId}"
   cpus params.threads
+  memory "40 GB"
   container  = params.main_image
   input:
     tuple val(sampleId), path(reads), val(QC_STATUS)

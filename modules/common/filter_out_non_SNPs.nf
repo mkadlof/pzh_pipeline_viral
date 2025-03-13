@@ -3,6 +3,7 @@ process filter_out_non_SNPs {
     tag "filtering out non-SNPs:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path('input.vcf.gz'), path('input.vcf.gz.tbi'), val(QC_status)
 

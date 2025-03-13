@@ -4,6 +4,7 @@ process nextclade {
     container  = params.main_image
     containerOptions "--volume ${params.external_databases_path}:/home/external_databases/"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path('output_consensus_masked_SV.fa'), path(ref_genome_with_index), val(QC_status), val(SAMPLE_SUBTYPE)
 

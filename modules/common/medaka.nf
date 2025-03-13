@@ -3,6 +3,7 @@ process medaka_first_round {
     tag "medaka_first_round:${sampleId}"
     container  = params.medaka_image
     cpus params.threads
+    memory "20 GB"
     input:
     tuple val(sampleId), path('trimmed.bam'), path('trimmed.bam.bai'), val(QC_status), path('genome.fasta')
     output:
@@ -39,6 +40,7 @@ process medaka_second_round {
     tag "medaka_second_roud:${sampleId}"
     container  = params.medaka_image
     cpus params.threads
+    memory "20 GB"
     input:
     tuple val(sampleId), path('trimmed.bam'), path('trimmed.bam.bai'), val(QC_status), path('genome.fasta'), path('pre_trimmed.bam'), path('pre_trimmed.bam.bai')
     output:

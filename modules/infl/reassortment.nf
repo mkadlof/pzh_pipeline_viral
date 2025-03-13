@@ -3,7 +3,7 @@ process reassortment {
     container  = params.main_image 
     publishDir "${params.results_dir}/${sampleId}", mode: 'copy', pattern: "hybrid_genome.fasta"
     cpus 1
-
+    memory "20 GB"
     input:
     tuple val(sampleId), path('subtype_mean_coverage_each_segment.txt'), path('subtype_scores_each_segment.txt'), val(REF_GENOME_ID_entry), val(QC_status)
     // path(genomes)

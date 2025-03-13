@@ -4,6 +4,7 @@ process json_aggregator_sars_illumina {
     container  = params.main_image
     containerOptions "--volume ${params.projectDir}:/home/projectDir:ro"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(fastqc_pre_json_forward), path(fastqc_pre_json_reverse),
           path(kraken_contamination),
@@ -59,6 +60,7 @@ process json_aggregator_rsv_illumina {
     container  = params.main_image
     containerOptions "--volume ${params.projectDir}:/home/projectDir:ro"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(fastqc_pre_json_forward), path(fastqc_pre_json_reverse),
           path(kraken_contamination),
@@ -114,6 +116,7 @@ process json_aggregator_influenza_illumina {
     container  = params.main_image
     containerOptions "--volume ${params.projectDir}:/home/projectDir:ro"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(fastqc_pre_json_forward), path(fastqc_pre_json_reverse),
           path(kraken_contamination),
@@ -174,6 +177,7 @@ process json_aggregator_sars_nanopore {
     container  = params.main_image
     containerOptions "--volume ${params.projectDir}:/home/projectDir:ro"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(fastqc_pre_json_forward),
           path(kraken_contamination),
@@ -229,6 +233,7 @@ process json_aggregator_rsv_nanopore {
     container  = params.main_image
     containerOptions "--volume ${params.projectDir}:/home/projectDir:ro"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(fastqc_pre_json_forward),
           path(kraken_contamination),
@@ -281,6 +286,7 @@ process json_aggregator_influenza_nanopore {
     container  = params.main_image
     containerOptions "--volume ${params.projectDir}:/home/projectDir:ro"
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(fastqc_pre_json_forward),
           path(kraken_contamination),

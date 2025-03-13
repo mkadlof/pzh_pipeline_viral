@@ -2,6 +2,7 @@ process coinfection_genome_masking_illumina {
     tag "coinfection_genome_masking:${sampleId}"
     container  = params.main_image
     cpus { params.threads > 5 ? 5 : params.threads }
+    memory "20 GB"
     input:
     tuple val(sampleId), path(mapped_reads), path(mapped_reads_bai), path(ref_genome_with_index), path(primers), val(QC_status)
 
@@ -42,6 +43,7 @@ process coinfection_genome_masking_nanopore {
     tag "coinfection_genome_masking:${sampleId}"
     container  = params.main_image
     cpus { params.threads > 5 ? 5 : params.threads }
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai), path(ref_genome_with_index), path(primers), val(QC_status)
 

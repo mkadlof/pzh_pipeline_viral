@@ -5,6 +5,7 @@ process substitute_ref_genome {
     tag "genome_substitution:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path('output_consensus_masked_SV.fa'), path(ref_genome_with_index), val(QC_status), path('original.fasta')
     output:

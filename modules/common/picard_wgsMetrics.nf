@@ -2,6 +2,7 @@ process picard_wgsMetrics {
     tag "wgsMetrics:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     publishDir "${params.results_dir}/${sampleId}/", mode: 'copy', pattern: "${sampleId}_coverage_barplot_*"
     publishDir "${params.results_dir}/${sampleId}/", mode: 'copy', pattern: "${sampleId}_coverage_histogram.csv"
 

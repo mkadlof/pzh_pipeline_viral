@@ -2,6 +2,7 @@ process bwa {
     tag "bwa:${sampleId}"
     cpus params.threads
     container  = params.main_image
+    memory "20 GB"
     input:
     tuple val(sampleId), path(reads), path(ref_genome_with_index), path("primers.bed"), val(QC_status)
 

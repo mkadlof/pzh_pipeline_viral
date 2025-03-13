@@ -29,7 +29,7 @@ obserco_extra - directory with primers used in PZH as part of the obserco grant,
 midnight1200 with added extra primers, but most of these additions have different sequences but map
 to the same genomic region as the original primer.
 
-It should be noted that ALL primers in this directory are "artificially" extended so that the
+It should be noted that ALL primers in this directory (save EQA2024.V4_1.nanopore) are "artificially" extended so that the
 amplicon is 1bp longer in the 5' and 3' directions. This allows `ivar` to properly mask reads that
 map just 1bp beyond their amplicon. This additional nucleotide should not biologically occur, but I
 attribute this to an Illumina error

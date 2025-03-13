@@ -1,4 +1,6 @@
 // Viral Pipeline
+// Hostname required by some slurm modules
+params.hostname = "hostname".execute().text.trim()
 
 // // Directory with main repository containing "modules" directory
 params.projectDir = ""
@@ -38,7 +40,7 @@ params.adapters_id="TruSeq3-PE-2" // Can be user-provided, there is a default
 params.species = "" // Required, name of a species expected to be analyzed with this pipeline can be either "SARS-CoV-2", "RSV" or "Influenza" 
 
 // // Output Directory
-params.results_dir = "./results/"
+params.results_dir = "" 
 
 // // All species-relevant variables, for now only expected genus for kraken2. Furthermore if a user provides a wrong species the pipeline will not execute
 

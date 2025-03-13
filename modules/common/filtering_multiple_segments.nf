@@ -1,6 +1,7 @@
 process filtering {
     tag "filtering:${sampleId}"
     container  = params.main_image
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai), path(ref_genome_with_index), val(QC_status), path(primers), path(pairs)
     output:
@@ -37,6 +38,7 @@ process filtering_nanopore {
     // Nanopore filtering and subsequent primer masking does not require ivar specific pairs file
     tag "filtering:${sampleId}"
     container  = params.main_image
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai),  path("ref_genome.fasta"), path("primers.bed"), val(QC_status)
 

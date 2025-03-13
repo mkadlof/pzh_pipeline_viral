@@ -2,6 +2,7 @@ process filtering {
     tag "filtering:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     input:
     tuple val(sampleId), path(bam), path(bai), val(QC_status), path(primers), path(pairs)
 
@@ -41,6 +42,7 @@ process filtering_nanopore {
     tag "filtering:${sampleId}"
     container  = params.main_image
     cpus 1
+    memory "20 GB"
     input:
     // emit bam_and_genome_and_primers z minimap2 
     tuple val(sampleId), path(bam), path(bai),  path("ref_genome.fasta"), path("primers.bed"), val(QC_status)

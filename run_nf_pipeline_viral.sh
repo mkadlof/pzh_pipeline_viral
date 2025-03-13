@@ -512,7 +512,7 @@ fi
 
 # Check primers
 CORRECT_ID=0
-ALL_PRIMERS=(EQA2023.SARS1 EQA2023.SARS2 EQA2024.V4_1 EQA2024.V4_1.nanopore EQA2024.V5_3 V1 V1200 V2 V3 V4 V4.1 V5.3.2 VarSkip2 V0)
+ALL_PRIMERS=(EQA2023.SARS1 EQA2023.SARS2 EQA2024.V4_1 EQA2024.V4_1.nanopore EQA2024.V5_3 V1 V1200 V2 V3 V4 V4.1 V5.3.2 VarSkip2 V0 V5.4.2)
 for var in ${ALL_PRIMERS[@]}; do
     if [ ${primers_id} == ${var} ];then
            CORRECT_ID=1
@@ -566,7 +566,8 @@ nextflow run ${projectDir}/nf_pipeline_viral.nf \
     --medaka_chunk_overlap ${medaka_chunk_overlap} \
     --first_round_pval ${first_round_pval} \
     --second_round_pval ${second_round_pval} \
-     -with-trace -profile ${profile}
+    -profile ${profile} \
+    -with-trace
 
 # Example call for SARS-CoV-2 Illumina data on A100
 # ./run_nf_pipeline.sh --reads "/mnt/md0/michall/EQA2024_SARS/fastq/*_{1,2}.fastq.gz"  --machine="Illumina" --species="SARS-CoV-2" --projectDir="/home/michall/git/pzh_pipeline_viral/" --threads 40 --primers_id="EQA2023.SARS2"

@@ -4,7 +4,7 @@ process fastqc {
     publishDir "${params.results_dir}/${sampleId}/QC", mode: 'copy', pattern: "*_reads_length_histogram.csv"
     publishDir "${params.results_dir}/${sampleId}/QC", mode: 'copy', pattern: "*_position_quality_plot.csv"
     cpus { params.threads > 10 ? 10 : params.threads }
-    memory '4 GB'
+    memory '20 GB'
     // publishDir "${params.results_dir}/${sampleId}/json_output", mode: 'copy', pattern: "*.json"
     container  = params.main_image
 
@@ -53,7 +53,7 @@ process run_fastqc_nanopore {
   tag "fastqc for sample ${sampleId}"
   container  = params.main_image
   cpus { params.threads > 10 ? 10 : params.threads }
-  memory '4 GB'
+  memory '20 GB'
   publishDir "${params.results_dir}/${sampleId}/QC", mode: 'copy', pattern: "*reads_quality_histogram.csv"
   publishDir "${params.results_dir}/${sampleId}/QC", mode: 'copy', pattern: "*reads_length_histogram.csv"
   publishDir "${params.results_dir}/${sampleId}/QC", mode: 'copy', pattern: "*position_quality_plot.csv"

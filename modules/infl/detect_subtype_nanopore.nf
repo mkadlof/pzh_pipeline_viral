@@ -4,6 +4,7 @@ process detect_subtype_nanopore {
     tag "detect_subtype:${sampleId}"
     container  = params.main_image
     cpus params.threads
+    memory "40 GB"
     input:
     tuple val(sampleId), path(reads), val(QC_STATUS)
     output:

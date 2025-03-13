@@ -2,7 +2,7 @@ process minimap2 {
     container  = params.main_image 
     tag "minimap2:${sampleId}"
     cpus params.threads
-
+    memory "20 GB"
     input:
     tuple val(sampleId), path(reads), path("ref_genome.fasta"), path("primers.bed"), val(QC_status)
 
